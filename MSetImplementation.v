@@ -13,7 +13,7 @@ Record MSet_struct A S :=
         mset_empty : S;
         mset_mem : A -> S -> bool;
         mset_add : A -> S -> S;
-        mset_cardinal : S -> int;
+        mset_cardinal : S -> nat;
     }.
 
 (* Skeleton definition of primitive ints as an ordered type *)
@@ -77,27 +77,29 @@ Module int_as_OT <: UsualOrderedType.
     
 End int_as_OT.
 
+(*
 Fixpoint nat_to_int (x : nat) : int :=
     match x with
     | 0 => 0
     | S x' => add 1 (nat_to_int x')
     end.
+*)
 
 (* Instantiate red black trees (RBT) MSets with integers. *)
 Module RBT := Coq.MSets.MSetRBT.Make int_as_OT.
 
-
+(*
 Definition RBT_foldl {B} (f : B -> int -> B) (b : B) (s : RBT.t) : B :=
     Coq.Lists.List.fold_left f (RBT.elements s) b.
 
-(*
 Definition RBT_size (s : RBT.t) : int :=
     let f := fun (acc : int) (_ : int) => add 1 acc
     in RBT_foldl f 0%int63 s.
-*)
+
 Definition RBT_size (s : RBT.t) : int :=
     let f := fun  (_ : int) (acc : int) => add 1 acc
     in RBT.fold f s 0%int63.
+*)
 
 Definition RBT_MSet_struct : MSet_struct int RBT.t :=
     {|
@@ -105,10 +107,10 @@ Definition RBT_MSet_struct : MSet_struct int RBT.t :=
         mset_mem := RBT.mem;
         mset_add := RBT.add;
         (*mset_cardinal := fun x => nat_to_int (RBT.cardinal x);*)
-        mset_cardinal := RBT_size
+        mset_cardinal := RBT.cardinal
     |}.
 
-CertiCoq Generate Glue -file "glue" [bool].
+CertiCoq Generate Glue -file "glue" [bool, nat].
 CertiCoq Compile -file "RBT" RBT_MSet_struct
     Extract Constants []
     Include ["stdbool.h" as library].

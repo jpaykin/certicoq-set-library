@@ -16,6 +16,7 @@ extern "C" {
     extern value make_Coq_Init_Datatypes_bool_false(void);
     extern unsigned int get_Coq_Init_Datatypes_bool_tag(value);
     extern void print_Coq_Init_Datatypes_bool(value);
+    extern unsigned int get_Coq_Init_Datatypes_nat_tag(value);
 }
 
 namespace certicoq {
@@ -59,6 +60,10 @@ enum SetOpsTag {
         set_add_tag,
         set_cardinal_tag
 };
+enum natTag {
+        nat_O_tag,
+        nat_S_tag
+};
 
 //////////////////////
 // Helper functions //
@@ -80,6 +85,16 @@ int value_to_int(const value v) {
 }
 value int_to_value(const int x) {
     return (value)Val_int(x);
+}
+value uint63_from_nat(value n) {
+  value temp = n;
+  uint64_t i = 0;
+
+  while (get_Coq_Init_Datatypes_nat_tag(temp) == nat_S_tag) {
+    i++;
+    temp = get_args(temp)[0];
+  }
+  return (value) ((i << 1) + 1);
 }
 
 // These macros are taken from VeriFFI examples,
@@ -195,8 +210,8 @@ int set::size() const {
 
     nalloc=1+sizeof(int); GC_SAVE2(tinfo_, vX, body_)
 
-    value v = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vX), f, vX);
-    return value_to_int(v);
+    value vnat = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vX), f, vX);
+    return value_to_int(uint63_from_nat(vnat));
     ENDFRAME
 }
 
