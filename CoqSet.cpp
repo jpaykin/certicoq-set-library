@@ -216,7 +216,7 @@ int main() {
     certicoq::set X;
     std::cout << "set has size: " << X.size() << "\n";
 
-    for (int i=0; i<1000; i++) {
+    for (int i=0; i<10000; i++) {
         std::cout << "Adding " << i << "\n";
         X.add(i);
     }
