@@ -1,4 +1,5 @@
 #include <iostream>
+#include <set>
 
 extern "C" {
     // Files found in path-to-certicoq/plugin/runtime/
@@ -187,13 +188,12 @@ bool set::isMember(int x) const {
 }
 
 int set::size() const {
-    int result;
     BEGINFRAME(tinfo_, 3);
     value body_ = body(tinfo_);
     value vX = getValue();
     value f = get_args(body_)[set_cardinal_tag];
 
-    nalloc=sizeof(result); GC_SAVE2(tinfo_, vX, body_)
+    nalloc=1+sizeof(int); GC_SAVE2(tinfo_, vX, body_)
 
     value v = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vX), f, vX);
     return value_to_int(v);
@@ -203,13 +203,26 @@ int set::size() const {
 }
 
 int main() {
+    /* Same operation on C++ standard library sets
+    std::set<int> X;
+    for (int i=0; i<10000; i++) {
+        std::cout << "Adding " << i << "\n";
+        X.insert(i);
+    }
+    std::cout << "new set has size: " << X.size() << "\n";
+    */
+
     certicoq::initialize_global_thread_info();
     certicoq::set X;
+    std::cout << "set has size: " << X.size() << "\n";
 
-    for (int i=0; i<10000; i++) {
-        std::cout << "Adding " << i << ";\n";
+    for (int i=0; i<1000; i++) {
+        std::cout << "Adding " << i << "\n";
         X.add(i);
     }
-    std::cout << "Done with adding\n";
     std::cout << "new set has size: " << X.size() << "\n";
+
+    for (int i=-100; i<10000; i++) {
+        std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
+    }
 }

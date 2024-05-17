@@ -1,0 +1,8 @@
+RBT.c
+glue.c
+CoqSet
+*.h
+*.o
+*.vo*
+*.glob
+*.aux
