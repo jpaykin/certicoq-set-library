@@ -23,9 +23,14 @@ namespace certicoq {
 
 // Global thread info
 static struct thread_info* tinfo_ = NULL;
+//value GLOBAL__ROOT__[1];
+value BODY__;
+//struct stack_frame GLOBAL__FRAME__ = { GLOBAL__ROOT__ + 1, GLOBAL__ROOT__, NULL };
+
 void initialize_global_thread_info() {
     if (tinfo_ == NULL) {
         tinfo_ = make_tinfo();
+        BODY__ = body(tinfo_);
     }
 }
 
@@ -37,7 +42,10 @@ class set {
 
     public:
         value getValue() const { return t_value_; };
-        void setValue(value v) { t_value_ = v; };
+        void setValue(value v) {
+            t_value_ = v;
+            //certicoq_modify(tinfo_, &t_value_, v); // from gc_stack.h
+        };
 
         // Constructors and destructors
         set(); // empty set
@@ -45,7 +53,7 @@ class set {
 
         void add(int x);
         bool isMember(int x) const;
-        int size() const;
+        int size();
 };
 
 ///////////////////
@@ -96,6 +104,7 @@ value uint63_from_nat(value n) {
   }
   return (value) ((i << 1) + 1);
 }
+
 
 // These macros are taken from VeriFFI examples,
 // e.g. https://github.com/CertiCoq/VeriFFI/blob/main/examples/array/prims.c
@@ -164,7 +173,7 @@ value uint63_from_nat(value n) {
 
 // Empty set
 set::set() {
-    value v = get_args(body(tinfo_))[set_empty_tag];
+    value v = get_args(BODY__)[set_empty_tag];
     setValue(v);
 }
 
@@ -172,45 +181,44 @@ set::set() {
 // set Operations //
 /////////////////////
 
+
 void set::add(int x) {
-    BEGINFRAME(tinfo_, 4)
+    BEGINFRAME(tinfo_, 3)
+
     value vs = getValue();
     value vx = int_to_value(x);
-    nalloc=10; GC_SAVE2(tinfo_, vs, vx)
 
-    value f = get_args(body(tinfo_))[set_add_tag];
-    value f0 = LIVEPOINTERS3(tinfo_, call(tinfo_, f, vx), f, vx, vs);
-    value v  = LIVEPOINTERS2(tinfo_, call(tinfo_, f0, vs), f0, vs);
+    value f  = get_args(BODY__)[set_add_tag];
+    value f0 = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vx), BODY__, vs);
+    value v  = LIVEPOINTERS1(tinfo_, call(tinfo_, f0, vs), BODY__);
     setValue(v);
     ENDFRAME
 }
 
 bool set::isMember(int x) const {
     bool result = false;
-    BEGINFRAME(tinfo_, 4)
-    value vX = getValue();
+    BEGINFRAME(tinfo_, 3)
+
+    value vs = getValue();
     value vx = int_to_value(x);
 
-    nalloc=100; GC_SAVE2(tinfo_, vX, vx)
 
-    value f  = get_args(body(tinfo_))[set_mem_tag];
-    value f0 = LIVEPOINTERS3(tinfo_, call(tinfo_, f, vx),  f, vx, vX);
-    value v  = LIVEPOINTERS2(tinfo_, call(tinfo_, f0, vX), f0, vX);
+    value f  = get_args(BODY__)[set_mem_tag];
+    value f0 = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vx), BODY__, vs);
+    value v  = LIVEPOINTERS2(tinfo_, call(tinfo_, f0, vs), BODY__, vs);
     result = value_to_bool(v);
 
     return result;
     ENDFRAME
 }
 
-int set::size() const {
+int set::size() {
     BEGINFRAME(tinfo_, 3);
-    value body_ = body(tinfo_);
-    value vX = getValue();
-    value f = get_args(body_)[set_cardinal_tag];
+    value vS = getValue();
+    value f = get_args(BODY__)[set_cardinal_tag];
 
-    nalloc=1+sizeof(int); GC_SAVE2(tinfo_, vX, body_)
-
-    value vnat = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vX), f, vX);
+    value vnat = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vS), BODY__, vS);
+    setValue(vS);
     return value_to_int(uint63_from_nat(vnat));
     ENDFRAME
 }
@@ -218,26 +226,26 @@ int set::size() const {
 }
 
 int main() {
-    /* Same operation on C++ standard library sets
-    std::set<int> X;
-    for (int i=0; i<10000; i++) {
-        std::cout << "Adding " << i << "\n";
-        X.insert(i);
-    }
-    std::cout << "new set has size: " << X.size() << "\n";
-    */
 
     certicoq::initialize_global_thread_info();
+
+    //certicoq::GLOBAL__ROOT__[0] = body(tinfo_);
+    //BODY__ = certicoq::GLOBAL__ROOT__[0];
+    //tinfo_->fp = &certicoq::GLOBAL__FRAME__;
+
+    std::cout << "initialized\n";
     certicoq::set X;
+    std::cout << "Created X\n";
     std::cout << "set has size: " << X.size() << "\n";
 
     for (int i=0; i<10000; i++) {
         std::cout << "Adding " << i << "\n";
         X.add(i);
+        std::cout << "set has size: " << X.size() << "\n";
     }
-    std::cout << "new set has size: " << X.size() << "\n";
+    
 
-    for (int i=-100; i<10000; i++) {
+    for (int i=-100; i<100; i++) {
         std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
     }
 }
