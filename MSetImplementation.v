@@ -13,7 +13,7 @@ Record MSet_struct A S :=
         mset_empty : S;
         mset_mem : A -> S -> bool;
         mset_add : A -> S -> S;
-        mset_cardinal : S -> nat;
+        mset_cardinal : S -> int;
     }.
 
 (* Skeleton definition of primitive ints as an ordered type *)
@@ -77,13 +77,13 @@ Module int_as_OT <: UsualOrderedType.
     
 End int_as_OT.
 
-(*
+
 Fixpoint nat_to_int (x : nat) : int :=
     match x with
     | 0 => 0
     | S x' => add 1 (nat_to_int x')
     end.
-*)
+
 
 (* Instantiate red black trees (RBT) MSets with integers. *)
 Module RBT := Coq.MSets.MSetRBT.Make int_as_OT.
@@ -106,8 +106,8 @@ Definition RBT_MSet_struct : MSet_struct int RBT.t :=
         mset_empty := RBT.empty;
         mset_mem := RBT.mem;
         mset_add := RBT.add;
-        (*mset_cardinal := fun x => nat_to_int (RBT.cardinal x);*)
-        mset_cardinal := RBT.cardinal
+        mset_cardinal := fun x => nat_to_int (RBT.cardinal x);
+        (*mset_cardinal := RBT.cardinal*)
     |}.
 
 CertiCoq Generate Glue -file "glue" [bool, nat].
