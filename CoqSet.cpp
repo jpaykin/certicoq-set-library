@@ -24,7 +24,6 @@ namespace certicoq {
 // Global thread info
 static struct thread_info* tinfo_ = NULL;
 value GLOBAL__ROOT__[1];
-//value BODY__;
 struct stack_frame GLOBAL__FRAME__ = { GLOBAL__ROOT__ + 1, GLOBAL__ROOT__, NULL };
 
 // Set of integers data structure
@@ -190,7 +189,6 @@ void initialize_global_thread_info() {
 
 void set::setValue(value v) {
     BEGINFRAME(tinfo_, 1)
-    //t_value_ = v;
     nalloc=1; GC_SAVE1(tinfo_, v);
     certicoq_modify(tinfo_, &t_value_, v); // from gc_stack.h
     ENDFRAME
@@ -202,21 +200,21 @@ void set::setValue(value v) {
 
 
 void set::add(int x) {
-    BEGINFRAME(tinfo_, 3)
+    BEGINFRAME(tinfo_, 1)
 
     value vx = int_to_value(x);
 
     value f  = get_args(GLOBAL__ROOT__[0])[set_add_tag];
     value f0 = LIVEPOINTERS0(tinfo_, call(tinfo_, f, vx));
 
-    value vs = getValue();
-    value v  = LIVEPOINTERS0(tinfo_, call(tinfo_, f0, vs));
+    value vX = getValue();
+    value v  = LIVEPOINTERS0(tinfo_, call(tinfo_, f0, vX));
     setValue(v);
     ENDFRAME
 }
 
 bool set::isMember(int x) const {
-    BEGINFRAME(tinfo_, 3)
+    BEGINFRAME(tinfo_, 1)
 
     value vx = int_to_value(x);
 
@@ -229,11 +227,13 @@ bool set::isMember(int x) const {
 
 int set::size() {
     BEGINFRAME(tinfo_, 1);
-    value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
 
-    // need to use the actual t_value_ here, not sufficient to use certicoq_mofidy. also can't seem to not track BODY__ here.
-    value v = LIVEPOINTERS1(tinfo_, call(tinfo_, f, getValue()), t_value_);
+    value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
+    value vX = getValue();
+    // need to use the actual t_value_ here, not sufficient to use certicoq_mofidy.
+    value v = LIVEPOINTERS1(tinfo_, call(tinfo_, f, vX), t_value_);
     return value_to_int(v);
+
     ENDFRAME
 }
 
@@ -248,14 +248,20 @@ int main() {
     std::cout << "Created X\n";
     std::cout << "set has size: " << X.size() << "\n";
 
+    certicoq::set Y;
+    Y.add(-3);
+
     for (int i=0; i<10000; i++) {
         std::cout << "Adding " << i << "\n";
         X.add(i);
         std::cout << "set has size: " << X.size() << "\n";
     }
-    
+
 
     for (int i=-100; i<20000; i++) {
         std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
     }
+
+    std::cout << "X has size " << X.size() << "\n";
+    std::cout << "Y has size " << Y.size() << "\n";
 }
