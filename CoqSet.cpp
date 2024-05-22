@@ -49,7 +49,7 @@ class set {
         ~set() = default;
 
         void add(int x);
-        bool isMember(int x) const;
+        bool isMember(int x);
         int size();
 };
 
@@ -192,19 +192,16 @@ void set::add(int x) {
     ENDFRAME
 }
 
-bool set::isMember(int x) const {
-    bool result = false;
+bool set::isMember(int x) {
     BEGINFRAME(tinfo_, 3)
 
-    value vs = getValue();
     value vx = int_to_value(x);
 
     value f  = get_args(BODY__)[set_mem_tag];
-    value f0 = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vx), BODY__, vs);
-    value v  = LIVEPOINTERS2(tinfo_, call(tinfo_, f0, vs), BODY__, vs);
-    result = value_to_bool(v);
+    value f0 = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vx), BODY__, t_value_);
+    value v  = LIVEPOINTERS2(tinfo_, call(tinfo_, f0, getValue()), BODY__, t_value_);
+    return value_to_bool(v);
 
-    return result;
     ENDFRAME
 }
 
@@ -213,8 +210,7 @@ int set::size() {
     value vS = getValue();
     value f = get_args(BODY__)[set_cardinal_tag];
 
-    value vnat = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vS), BODY__, vS);
-    setValue(vS);
+    value vnat = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vS), BODY__, t_value_);
     return value_to_int(uint63_from_nat(vnat));
     ENDFRAME
 }
