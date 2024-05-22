@@ -23,12 +23,15 @@ namespace certicoq {
 
 // Global thread info
 static struct thread_info* tinfo_ = NULL;
-value BODY__;
+value GLOBAL__ROOT__[1];
+struct stack_frame GLOBAL__FRAME__ = { GLOBAL__ROOT__ + 1, GLOBAL__ROOT__, NULL };
 
 void initialize_global_thread_info() {
     if (tinfo_ == NULL) {
         tinfo_ = make_tinfo();
-        BODY__ = body(tinfo_);
+
+        GLOBAL__ROOT__[0] = body(tinfo_);
+        tinfo_->fp = &GLOBAL__FRAME__;
     }
 }
 
@@ -170,7 +173,7 @@ value uint63_from_nat(value n) {
 
 // Empty set
 set::set() {
-    value v = get_args(BODY__)[set_empty_tag];
+    value v = get_args(GLOBAL__ROOT__[0])[set_empty_tag];
     setValue(v);
 }
 
@@ -185,9 +188,9 @@ void set::add(int x) {
     value vs = getValue();
     value vx = int_to_value(x);
 
-    value f  = get_args(BODY__)[set_add_tag];
-    value f0 = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vx), BODY__, vs);
-    value v  = LIVEPOINTERS1(tinfo_, call(tinfo_, f0, vs), BODY__);
+    value f  = get_args(GLOBAL__ROOT__[0])[set_add_tag];
+    value f0 = LIVEPOINTERS1(tinfo_, call(tinfo_, f, vx), vs);
+    value v  = LIVEPOINTERS0(tinfo_, call(tinfo_, f0, vs));
     setValue(v);
     ENDFRAME
 }
@@ -197,9 +200,9 @@ bool set::isMember(int x) {
 
     value vx = int_to_value(x);
 
-    value f  = get_args(BODY__)[set_mem_tag];
-    value f0 = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vx), BODY__, t_value_);
-    value v  = LIVEPOINTERS2(tinfo_, call(tinfo_, f0, getValue()), BODY__, t_value_);
+    value f  = get_args(GLOBAL__ROOT__[0])[set_mem_tag];
+    value f0 = LIVEPOINTERS1(tinfo_, call(tinfo_, f, vx), t_value_);
+    value v  = LIVEPOINTERS1(tinfo_, call(tinfo_, f0, getValue()), t_value_);
     return value_to_bool(v);
 
     ENDFRAME
@@ -208,9 +211,9 @@ bool set::isMember(int x) {
 int set::size() {
     BEGINFRAME(tinfo_, 3);
     value vS = getValue();
-    value f = get_args(BODY__)[set_cardinal_tag];
+    value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
 
-    value vnat = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vS), BODY__, t_value_);
+    value vnat = LIVEPOINTERS1(tinfo_, call(tinfo_, f, vS), t_value_);
     return value_to_int(uint63_from_nat(vnat));
     ENDFRAME
 }
@@ -234,7 +237,7 @@ int main() {
         std::cout << "set has size: " << X.size() << "\n";
     }
     
-    for (int i=-100; i<100; i++) {
+    for (int i=-100; i<20000; i++) {
         std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
     }
 
