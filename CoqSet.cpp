@@ -162,8 +162,12 @@ value uint63_from_nat(value n) {
 
 // Empty set
 set::set() {
+    BEGINFRAME(tinfo_, 1)
+
     value v = get_args(GLOBAL__ROOT__[0])[set_empty_tag];
     setValue(v);
+
+    ENDFRAME
 }
 
 ////////////
@@ -230,13 +234,13 @@ int set::size() {
 
     value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
     value vX = getValue();
-    // need to use the actual t_value_ here, not sufficient to use certicoq_mofidy.
-    value v = LIVEPOINTERS1(tinfo_, call(tinfo_, f, vX), t_value_);
+    // need to use the actual t_value_ here, not sufficient to use certicoq_modify.
+    //value v = LIVEPOINTERS1(tinfo_, call(tinfo_, f, vX), t_value_);
+    value v = LIVEPOINTERS0(tinfo_, call(tinfo_, f, vX)); // If we don't pass t_value_ to LIVEPOINTERS, get segfault
     return value_to_int(v);
 
     ENDFRAME
 }
-
 }
 
 int main() {
