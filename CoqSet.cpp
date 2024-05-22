@@ -23,9 +23,7 @@ namespace certicoq {
 
 // Global thread info
 static struct thread_info* tinfo_ = NULL;
-//value GLOBAL__ROOT__[1];
 value BODY__;
-//struct stack_frame GLOBAL__FRAME__ = { GLOBAL__ROOT__ + 1, GLOBAL__ROOT__, NULL };
 
 void initialize_global_thread_info() {
     if (tinfo_ == NULL) {
@@ -44,7 +42,6 @@ class set {
         value getValue() const { return t_value_; };
         void setValue(value v) {
             t_value_ = v;
-            //certicoq_modify(tinfo_, &t_value_, v); // from gc_stack.h
         };
 
         // Constructors and destructors
@@ -202,7 +199,6 @@ bool set::isMember(int x) const {
     value vs = getValue();
     value vx = int_to_value(x);
 
-
     value f  = get_args(BODY__)[set_mem_tag];
     value f0 = LIVEPOINTERS2(tinfo_, call(tinfo_, f, vx), BODY__, vs);
     value v  = LIVEPOINTERS2(tinfo_, call(tinfo_, f0, vs), BODY__, vs);
@@ -229,14 +225,12 @@ int main() {
 
     certicoq::initialize_global_thread_info();
 
-    //certicoq::GLOBAL__ROOT__[0] = body(tinfo_);
-    //BODY__ = certicoq::GLOBAL__ROOT__[0];
-    //tinfo_->fp = &certicoq::GLOBAL__FRAME__;
-
     std::cout << "initialized\n";
     certicoq::set X;
+    // Does NOT support multiple sets at once
+    // certicoq::set Y;
     std::cout << "Created X\n";
-    std::cout << "set has size: " << X.size() << "\n";
+    std::cout << "set X has size: " << X.size() << "\n";
 
     for (int i=0; i<10000; i++) {
         std::cout << "Adding " << i << "\n";
@@ -244,8 +238,9 @@ int main() {
         std::cout << "set has size: " << X.size() << "\n";
     }
     
-
     for (int i=-100; i<100; i++) {
         std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
     }
+
+    // std::cout << "set Y has size: " << Y.size() << "\n";
 }
