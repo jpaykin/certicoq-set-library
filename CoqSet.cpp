@@ -38,7 +38,7 @@ class set {
 
         // Constructors and destructors
         set(); // empty set
-        ~set() = default;
+        ~set();
 
         void add(int x);
         bool isMember(int x) const;
@@ -170,6 +170,13 @@ set::set() {
     ENDFRAME
 }
 
+
+// Destructor
+ set::~set() { 
+    std::cout << "Calling destructor\n";
+    reset_heap(tinfo_->heap);
+};
+
 ////////////
 // Setter //
 ////////////
@@ -243,6 +250,13 @@ int set::size() {
 }
 }
 
+int foo() {
+    certicoq::set Z;
+    Z.add(5);
+    Z.add(4);
+    return Z.size();
+}
+
 int main() {
 
     certicoq::initialize_global_thread_info();
@@ -255,17 +269,21 @@ int main() {
     certicoq::set Y;
     Y.add(-3);
 
-    for (int i=0; i<10000; i++) {
+    for (int i=0; i<1000; i++) {
         std::cout << "Adding " << i << "\n";
         X.add(i);
         std::cout << "set has size: " << X.size() << "\n";
     }
 
-
+    /*
     for (int i=-100; i<20000; i++) {
         std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
     }
+    */
 
+    for (int i=0; i<1000; i++) {
+        std::cout << "Calling foo, which created a set of size " << foo() << "\n";
+    }
     std::cout << "X has size " << X.size() << "\n";
     std::cout << "Y has size " << Y.size() << "\n";
 }
