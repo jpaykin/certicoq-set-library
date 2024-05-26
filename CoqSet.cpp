@@ -21,19 +21,107 @@ extern "C" {
 
 namespace certicoq {
 
+
+struct stack_frame_dll {
+    struct stack_frame_dll* next;
+    struct stack_frame* frame;
+    struct stack_frame_dll* prev;
+};
+
+
 // Global thread info
 static struct thread_info* tinfo_ = NULL;
 value GLOBAL__ROOT__[1];
 struct stack_frame GLOBAL__FRAME__ = { GLOBAL__ROOT__ + 1, GLOBAL__ROOT__, NULL };
 
+struct stack_frame *BASE = &GLOBAL__FRAME__;
+struct stack_frame_dll BASE_DLL = {NULL, BASE, NULL};
+
+
+void insert(struct stack_frame_dll* new_node,
+            struct stack_frame_dll* A){
+    // Assume the stack had the form:
+    //
+    //      A[next,frameA,prev=B] <-> B[next=A,frameB,prev]
+    //               |                            |
+    //               v                            v
+    //      [next,root,prev=frameB] ->  [nextB,rootB,prev]
+    //
+    // The result should have the form:
+    //
+    //      A[next,frameA,prev=new] <-> new[next=A,frameNew,prev=B]  <-> B[next=new,frameB,prev]
+    //               |                            |                         |
+    //               v                            v                         v
+    //      [-,-,prev=frameNew]     ->     [-,-,prev=frameB]       ->  [-,-,prev]
+    //
+    // Want to insert a new stack frame node between A and B
+    struct stack_frame_dll* B = A->prev;
+    
+    // Update A->prev to point to new_node and A->frame to point to the new frame
+    if (A != NULL) {
+        A->prev        = new_node;
+        A->frame->prev = new_node->frame;
+    }
+
+    // Update new_node to point to A (next) and B (prev)
+    new_node->next = A;
+    new_node->prev = B;
+    if (B != NULL) {
+        new_node->frame->prev = B->frame;
+    } else {
+        new_node->frame->prev = NULL;
+    }
+    // Update B->next to point to new_node
+    if (B != NULL) {
+        B->next = new_node;
+    }
+}
+
+void remove(struct stack_frame_dll* node) {
+    // Assume the stack had the form:;
+    //
+    //      A[next,frameA,prev=new] <-> node[next=A,frameN,prev=B]  <-> B[next=node,frameB,prev]
+    //               |                            |                         |
+    //               v                            v                         v
+    //      [-,-,prev=frameN]      ->     [-,-,prev=frameB]       ->  [-,-,prev]
+    //
+    // Then the result should have the form:
+    //
+    //      A[next,frameA,prev=B] <-> B[next=A,frameB,prev]
+    //               |                            |
+    //               v                            v
+    //      [next,root,prev=frameB] ->  [nextB,rootB,prev]
+    //
+    struct stack_frame_dll* A = node->next;
+    struct stack_frame_dll* B = node->prev;
+
+    if (A != NULL) {
+        A->prev = B;
+        A->frame->prev = node->frame->prev; // in case B is null
+    }
+    if (B != NULL) {
+        B->next = A;
+    }
+}
+
+
 // Set of integers data structure
 class set {
     private:
         // the value underlying the set
-        value t_value_;
+        //value t_value_;
+
+        // Each object in the set will be added to a linked list of frames.
+        // The frame `this_frame` will be populated with the value myroot, which stores
+        // the value underlying the set.
+        // The pointer `prev_set_ptr` is a pointer to the frame that comes before
+        // `this_frame` in the linked list.
+        value myroot[1];
+        struct stack_frame this_frame;
+        struct stack_frame_dll this_node;
 
     public:
-        value getValue() const { return t_value_; };
+        value getValue() const { return myroot[0]; };
         void setValue(value v);
 
         // Constructors and destructors
@@ -160,21 +248,24 @@ value uint63_from_nat(value n) {
 // Constructors //
 //////////////////
 
+
 // Empty set
 set::set() {
-    BEGINFRAME(tinfo_, 1)
+    // Add an empty set to myroot[0]
+    myroot[0] = get_args(GLOBAL__ROOT__[0])[set_empty_tag];
 
-    value v = get_args(GLOBAL__ROOT__[0])[set_empty_tag];
-    setValue(v);
+    // Initialize this_frame and this_node
+    this_frame = {myroot+1, myroot, NULL};
+    this_node.frame = &this_frame;
 
-    ENDFRAME
+    // Add this_node and this_frame into the linked list of frames
+    insert(&this_node, &BASE_DLL);
 }
 
 
 // Destructor
  set::~set() { 
-    std::cout << "Calling destructor\n";
-    reset_heap(tinfo_->heap);
+    remove(&this_node);
 };
 
 ////////////
@@ -187,7 +278,7 @@ void initialize_global_thread_info() {
         tinfo_ = make_tinfo();
 
         GLOBAL__ROOT__[0] = body(tinfo_);
-        tinfo_->fp = &GLOBAL__FRAME__;
+        tinfo_->fp = BASE;
 
         //BEGINFRAME(tinfo_, 1)
         //nalloc=1; GC_SAVE1(tinfo_, b);
@@ -199,10 +290,7 @@ void initialize_global_thread_info() {
 
 
 void set::setValue(value v) {
-    BEGINFRAME(tinfo_, 1)
-    nalloc=1; GC_SAVE1(tinfo_, v);
-    certicoq_modify(tinfo_, &t_value_, v); // from gc_stack.h
-    ENDFRAME
+    myroot[0] = v;
 }
 
 /////////////////////
@@ -241,9 +329,7 @@ int set::size() {
 
     value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
     value vX = getValue();
-    // need to use the actual t_value_ here, not sufficient to use certicoq_modify.
-    //value v = LIVEPOINTERS1(tinfo_, call(tinfo_, f, vX), t_value_);
-    value v = LIVEPOINTERS0(tinfo_, call(tinfo_, f, vX)); // If we don't pass t_value_ to LIVEPOINTERS, get segfault
+    value v = LIVEPOINTERS0(tinfo_, call(tinfo_, f, vX));
     return value_to_int(v);
 
     ENDFRAME
@@ -254,6 +340,8 @@ int foo() {
     certicoq::set Z;
     Z.add(5);
     Z.add(4);
+    Z.add(200);
+    Z.add(20000);
     return Z.size();
 }
 
@@ -275,13 +363,11 @@ int main() {
         std::cout << "set has size: " << X.size() << "\n";
     }
 
-    /*
     for (int i=-100; i<20000; i++) {
         std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
     }
-    */
 
-    for (int i=0; i<1000; i++) {
+    for (int i=0; i<10000; i++) {
         std::cout << "Calling foo, which created a set of size " << foo() << "\n";
     }
     std::cout << "X has size " << X.size() << "\n";
