@@ -1,12 +1,6 @@
-#include <iostream>
-#include <set>
+#include "CoqSet.h"
 
 extern "C" {
-    // Files found in path-to-certicoq/plugin/runtime/
-    #include "values.h"
-    #include "gc_stack.h"
-    #include "prim_int63.h"
-
     extern struct thread_info *make_tinfo();
     extern value *get_args(value);
     extern value call(struct thread_info *, value, value);
@@ -22,13 +16,6 @@ extern "C" {
 namespace certicoq {
 
 
-struct stack_frame_dll {
-    struct stack_frame_dll* next;
-    struct stack_frame* frame;
-    struct stack_frame_dll* prev;
-};
-
-
 // Global thread info
 static struct thread_info* tinfo_ = NULL;
 value GLOBAL__ROOT__[1];
@@ -36,7 +23,6 @@ struct stack_frame GLOBAL__FRAME__ = { GLOBAL__ROOT__ + 1, GLOBAL__ROOT__, NULL 
 
 struct stack_frame *BASE = &GLOBAL__FRAME__;
 struct stack_frame_dll BASE_DLL = {NULL, BASE, NULL};
-
 
 void insert(struct stack_frame_dll* new_node,
             struct stack_frame_dll* A){
@@ -104,34 +90,6 @@ void remove(struct stack_frame_dll* node) {
     }
 }
 
-
-// Set of integers data structure
-class set {
-    private:
-        // the value underlying the set
-        //value t_value_;
-
-        // Each object in the set will be added to a linked list of frames.
-        // The frame `this_frame` will be populated with the value myroot, which stores
-        // the value underlying the set.
-        // The pointer `prev_set_ptr` is a pointer to the frame that comes before
-        // `this_frame` in the linked list.
-        value myroot[1];
-        struct stack_frame this_frame;
-        struct stack_frame_dll this_node;
-
-    public:
-        value getValue() const { return myroot[0]; };
-        void setValue(value v);
-
-        // Constructors and destructors
-        set(); // empty set
-        ~set();
-
-        void add(int x);
-        bool isMember(int x) const;
-        int size(); // should be const, but because we need to reference the pointer t_value_ here, is not
-};
 
 ///////////////////
 // Instantiation //
@@ -345,6 +303,7 @@ int foo() {
     return Z.size();
 }
 
+/*
 int main() {
 
     certicoq::initialize_global_thread_info();
@@ -373,3 +332,4 @@ int main() {
     std::cout << "X has size " << X.size() << "\n";
     std::cout << "Y has size " << Y.size() << "\n";
 }
+*/

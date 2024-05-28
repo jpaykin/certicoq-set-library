@@ -1,7 +1,8 @@
 RBT.c
+RBT.h
 glue.c
-CoqSet
-*.h
+glue.h
+SetBenchmarks
 *.o
 *.vo*
 *.glob
