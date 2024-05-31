@@ -42,21 +42,16 @@ void insert(struct stack_frame_dll* new_node,
     //
     // Want to insert a new stack frame node between A and B
     struct stack_frame_dll* B = A->prev;
-    
+    new_node->frame->prev = A->frame->prev;
+
     // Update A->prev to point to new_node and A->frame to point to the new frame
-    if (A != NULL) {
-        A->prev        = new_node;
-        A->frame->prev = new_node->frame;
-    }
+    A->prev        = new_node;
+    A->frame->prev = new_node->frame;
 
     // Update new_node to point to A (next) and B (prev)
     new_node->next = A;
     new_node->prev = B;
-    if (B != NULL) {
-        new_node->frame->prev = B->frame;
-    } else {
-        new_node->frame->prev = NULL;
-    }
+
     // Update B->next to point to new_node
     if (B != NULL) {
         B->next = new_node;
@@ -220,6 +215,18 @@ set::set() {
     insert(&this_node, &BASE_DLL);
 }
 
+// Copy constructor
+set::set(const set& other) {
+    myroot[0] = other.getValue();
+
+    // Initialize this_frame and this_node
+    this_frame = {myroot+1, myroot, NULL};
+    this_node.frame = &this_frame;
+
+    // Add this_node and this_frame into the linked list of frames
+    insert(&this_node, &BASE_DLL);
+}
+
 
 // Destructor
  set::~set() { 
@@ -237,12 +244,6 @@ void initialize_global_thread_info() {
 
         GLOBAL__ROOT__[0] = body(tinfo_);
         tinfo_->fp = BASE;
-
-        //BEGINFRAME(tinfo_, 1)
-        //nalloc=1; GC_SAVE1(tinfo_, b);
-        //value b = body(tinfo_);
-        //certicoq_modify(tinfo_, &BODY__, b);
-        //ENDFRAME
     }
 }
 
@@ -257,40 +258,28 @@ void set::setValue(value v) {
 
 
 void set::add(int x) {
-    BEGINFRAME(tinfo_, 1)
-
     value vx = int_to_value(x);
 
     value f  = get_args(GLOBAL__ROOT__[0])[set_add_tag];
     value f0 = LIVEPOINTERS0(tinfo_, call(tinfo_, f, vx));
-
-    value vX = getValue();
-    value v  = LIVEPOINTERS0(tinfo_, call(tinfo_, f0, vX));
+    value v  = LIVEPOINTERS0(tinfo_, call(tinfo_, f0, getValue()));
     setValue(v);
-    ENDFRAME
 }
 
 bool set::isMember(int x) const {
-    BEGINFRAME(tinfo_, 1)
-
     value vx = int_to_value(x);
 
     value f  = get_args(GLOBAL__ROOT__[0])[set_mem_tag];
-    value f0 = LIVEPOINTERS0(tinfo_, call(tinfo_, f, vx));
-    value v  = LIVEPOINTERS0(tinfo_, call(tinfo_, f0, getValue()));
+    value f0 = call(tinfo_, f, vx);
+    value v  = call(tinfo_, f0, getValue());
+
     return value_to_bool(v);
-    ENDFRAME
 }
 
 int set::size() {
-    BEGINFRAME(tinfo_, 1);
-
     value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
-    value vX = getValue();
-    value v = LIVEPOINTERS0(tinfo_, call(tinfo_, f, vX));
+    value v = LIVEPOINTERS0(tinfo_, call(tinfo_, f, getValue()));
     return value_to_int(v);
-
-    ENDFRAME
 }
 }
 

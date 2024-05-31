@@ -36,6 +36,8 @@ class set {
         // The pointer `prev_set_ptr` is a pointer to the frame that comes before
         // `this_frame` in the linked list.
         value myroot[1];
+        // TODO: this_frame could simply be a component of this_node, instead of
+        // its own object.
         struct stack_frame this_frame;
         struct stack_frame_dll this_node;
 
@@ -45,6 +47,7 @@ class set {
 
         // Constructors and destructors
         set(); // empty set
+        set(const set& other); // copy constructor
         ~set();
 
         void add(int x);
