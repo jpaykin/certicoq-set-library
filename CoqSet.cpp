@@ -20,37 +20,48 @@ namespace certicoq {
 static struct thread_info* tinfo_ = NULL;
 value GLOBAL__ROOT__[1];
 struct stack_frame GLOBAL__FRAME__ = { GLOBAL__ROOT__ + 1, GLOBAL__ROOT__, NULL };
+struct stack_frame *BASE_FRAME = &GLOBAL__FRAME__;
+struct stack_frame_dll BASE_DLL = {NULL, BASE_FRAME, NULL};
 
-struct stack_frame *BASE = &GLOBAL__FRAME__;
-struct stack_frame_dll BASE_DLL = {NULL, BASE, NULL};
-
+// Insert a new stack_frame_dll node into an existing stack_frame_dll stack.
+//
+// Assume the stack had the form:
+//
+//     A[next,frameA,prev=B] <-> B[next=A,frameB,prev]
+//              |                            |
+//              v                            v
+//     [next,root,prev=frameB] ->  [nextB,rootB,prev]
+//
+// The result should have the form:
+//
+//     A[next,frameA,prev=new] <-> new[next=A,frameNew,prev=B]  <-> B[next=new,frameB,prev]
+//              |                            |                         |
+//              v                            v                         v
+//     [-,-,prev=frameNew]     ->     [-,-,prev=frameB]       ->  [-,-,prev]
+//
+// Want to insert a new stack frame node between A and B
+//
+// Parameters:
+//
+//      new_node: a non-null pointer to a stack_frame_dll. The next and prev fields
+//      of new_node are ignored, and can be assumed to be NULL.
+//
+//      A: a non-null pointer to a stack_frame_dll. A should be on the current stack in tinfo.
+//      Typical argument for A is &BASE_DLL
+//
 void insert(struct stack_frame_dll* new_node,
             struct stack_frame_dll* A){
-    // Assume the stack had the form:
-    //
-    //      A[next,frameA,prev=B] <-> B[next=A,frameB,prev]
-    //               |                            |
-    //               v                            v
-    //      [next,root,prev=frameB] ->  [nextB,rootB,prev]
-    //
-    // The result should have the form:
-    //
-    //      A[next,frameA,prev=new] <-> new[next=A,frameNew,prev=B]  <-> B[next=new,frameB,prev]
-    //               |                            |                         |
-    //               v                            v                         v
-    //      [-,-,prev=frameNew]     ->     [-,-,prev=frameB]       ->  [-,-,prev]
-    //
-    // Want to insert a new stack frame node between A and B
     struct stack_frame_dll* B = A->prev;
-    new_node->frame->prev = A->frame->prev;
-
-    // Update A->prev to point to new_node and A->frame to point to the new frame
-    A->prev        = new_node;
-    A->frame->prev = new_node->frame;
 
     // Update new_node to point to A (next) and B (prev)
     new_node->next = A;
     new_node->prev = B;
+    new_node->frame->prev = A->frame->prev;
+
+    // Update A->prev to point to new_node and A->frame to point to the new
+    // frame
+    A->prev        = new_node;
+    A->frame->prev = new_node->frame;
 
     // Update B->next to point to new_node
     if (B != NULL) {
@@ -58,21 +69,26 @@ void insert(struct stack_frame_dll* new_node,
     }
 }
 
+// Remove the given stack_frame_dll node from its doubly linked list.
+//
+// Parameters:
+//
+//      node: a non-NULL pointer to a stack_frame_dll
+// Assume the stack had the form:
+//
+//      A[next,frameA,prev=new] <-> node[next=A,frameN,prev=B]  <-> B[next=node,frameB,prev]
+//               |                            |                         |
+//               v                            v                         v
+//      [-,-,prev=frameN]      ->     [-,-,prev=frameB]       ->  [-,-,prev]
+//
+// Then the result should have the form:
+//
+//      A[next,frameA,prev=B] <-> B[next=A,frameB,prev]
+//               |                            |
+//               v                            v
+//      [next,root,prev=frameB] ->  [nextB,rootB,prev]
+//
 void remove(struct stack_frame_dll* node) {
-    // Assume the stack had the form:;
-    //
-    //      A[next,frameA,prev=new] <-> node[next=A,frameN,prev=B]  <-> B[next=node,frameB,prev]
-    //               |                            |                         |
-    //               v                            v                         v
-    //      [-,-,prev=frameN]      ->     [-,-,prev=frameB]       ->  [-,-,prev]
-    //
-    // Then the result should have the form:
-    //
-    //      A[next,frameA,prev=B] <-> B[next=A,frameB,prev]
-    //               |                            |
-    //               v                            v
-    //      [next,root,prev=frameB] ->  [nextB,rootB,prev]
-    //
     struct stack_frame_dll* A = node->next;
     struct stack_frame_dll* B = node->prev;
 
@@ -207,11 +223,11 @@ set::set() {
     // Add an empty set to myroot[0]
     myroot[0] = get_args(GLOBAL__ROOT__[0])[set_empty_tag];
 
-    // Initialize this_frame and this_node
+    // Initialize this_node with a new frame
     this_frame = {myroot+1, myroot, NULL};
     this_node.frame = &this_frame;
 
-    // Add this_node and this_frame into the linked list of frames
+    // Add this_node into the linked list of frames
     insert(&this_node, &BASE_DLL);
 }
 
@@ -219,11 +235,11 @@ set::set() {
 set::set(const set& other) {
     myroot[0] = other.getValue();
 
-    // Initialize this_frame and this_node
+    // Initialize this_node with a new frame
     this_frame = {myroot+1, myroot, NULL};
     this_node.frame = &this_frame;
 
-    // Add this_node and this_frame into the linked list of frames
+    // Add this_node into the linked list of frames
     insert(&this_node, &BASE_DLL);
 }
 
@@ -243,7 +259,7 @@ void initialize_global_thread_info() {
         tinfo_ = make_tinfo();
 
         GLOBAL__ROOT__[0] = body(tinfo_);
-        tinfo_->fp = BASE;
+        tinfo_->fp = BASE_FRAME;
     }
 }
 
@@ -276,7 +292,7 @@ bool set::isMember(int x) const {
     return value_to_bool(v);
 }
 
-int set::size() {
+int set::size() const {
     value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
     value v = LIVEPOINTERS0(tinfo_, call(tinfo_, f, getValue()));
     return value_to_int(v);

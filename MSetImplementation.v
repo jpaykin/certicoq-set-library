@@ -92,10 +92,11 @@ Module RBT := Coq.MSets.MSetRBT.Make int_as_OT.
 Definition RBT_foldl {B} (f : B -> int -> B) (b : B) (s : RBT.t) : B :=
     Coq.Lists.List.fold_left f (RBT.elements s) b.
 
+(* Implement RBT_size so it doesn't recurse over primitive nats directly,
+   avoiding stack overflow *)
 Definition RBT_size (s : RBT.t) : int :=
     let f := fun (acc : int) (_ : int) => add 1 acc
     in RBT_foldl f 0%int63 s.
-
 (*
 Definition RBT_size (s : RBT.t) : int :=
     let f := fun  (_ : int) (acc : int) => add 1 acc
@@ -103,26 +104,13 @@ Definition RBT_size (s : RBT.t) : int :=
 *)
 
 
-Definition RBT_mem_foldl (x : int) (s : RBT.t) : bool :=
-    let f := fun (b : bool) (y : int) =>
-        orb b (eqb x y)
-
-    in RBT_foldl f false s.
-Definition RBT_mem_fold (x : int) (s : RBT.t) : bool :=
-        let f := fun (y : int) (b : bool) =>
-            orb b (eqb x y)
-
-        in RBT.fold f s false.
-
 Definition RBT_MSet_struct : MSet_struct int RBT.t :=
     {|
         mset_empty := RBT.empty;
         mset_mem := RBT.mem;
-        (*mset_mem := RBT_mem_fold;*)
         mset_add := RBT.add;
         (*mset_cardinal := fun x => nat_to_int (RBT.cardinal x);*)
         mset_cardinal := RBT_size;
-        (*mset_cardinal := RBT.cardinal*)
     |}.
 
 CertiCoq Generate Glue -file "glue" [bool, nat].

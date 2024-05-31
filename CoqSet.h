@@ -9,7 +9,6 @@ extern "C" {
     #include "values.h"
     #include "gc_stack.h"
     #include "prim_int63.h"
-
 }
 
 namespace certicoq {
@@ -36,8 +35,6 @@ class set {
         // The pointer `prev_set_ptr` is a pointer to the frame that comes before
         // `this_frame` in the linked list.
         value myroot[1];
-        // TODO: this_frame could simply be a component of this_node, instead of
-        // its own object.
         struct stack_frame this_frame;
         struct stack_frame_dll this_node;
 
@@ -47,12 +44,12 @@ class set {
 
         // Constructors and destructors
         set(); // empty set
-        set(const set& other); // copy constructor
+        set(const set&); // copy constructor
         ~set();
 
         void add(int x);
         bool isMember(int x) const;
-        int size(); // should be const, but because we need to reference the pointer t_value_ here, is not
+        int size() const;
 };
 
 }
