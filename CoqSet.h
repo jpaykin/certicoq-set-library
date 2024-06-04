@@ -16,7 +16,7 @@ namespace certicoq {
 
 struct stack_frame_dll {
     struct stack_frame_dll* next;
-    struct stack_frame* frame;
+    struct stack_frame frame;
     struct stack_frame_dll* prev;
 };
 
@@ -26,20 +26,16 @@ void initialize_global_thread_info();
 // Set of integers data structure
 class set {
     private:
-        // the value underlying the set
-        //value t_value_;
-
         // Each object in the set will be added to a linked list of frames.
-        // The frame `this_frame` will be populated with the value myroot, which stores
+        // The frame `this_frame` will be populated with the value t_value_, which stores
         // the value underlying the set.
         // The pointer `prev_set_ptr` is a pointer to the frame that comes before
         // `this_frame` in the linked list.
-        value myroot[1];
-        struct stack_frame this_frame;
+        value t_value_[1];
         struct stack_frame_dll this_node;
 
     public:
-        value getValue() const { return myroot[0]; };
+        value getValue() const { return t_value_[0]; };
         void setValue(value v);
 
         // Constructors and destructors

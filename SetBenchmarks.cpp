@@ -132,11 +132,48 @@ void benchmarkLookups(int n, int m) {
 }
 
 
+int foo() {
+    certicoq::set Z;
+    Z.add(5);
+    Z.add(4);
+    Z.add(200);
+    Z.add(20000);
+    return Z.size();
+}
+void test() {
+    certicoq::set X;
+    std::cout << "Created X\n";
+    std::cout << "set has size: " << X.size() << "\n";
+
+    certicoq::set Y;
+    Y.add(-3);
+
+    for (int i=0; i<1000; i++) {
+        std::cout << "Adding " << i << "\n";
+        X.add(i);
+        std::cout << "set has size: " << X.size() << "\n";
+    }
+
+    for (int i=-100; i<20000; i++) {
+        std::cout << "Checking membership of " << i << ": " << X.isMember(i) << "\n";
+    }
+
+    int sz;
+    for (int i=0; i<10000; i++) {
+        sz = foo();
+        //std::cout << "Calling foo, which created a set of size " << foo() << "\n";
+    }
+    std::cout << "X has size " << X.size() << "\n";
+    std::cout << "Y has size " << Y.size() << "\n";
+}
+
 int main() {
     
     
     certicoq::initialize_global_thread_info();
     //certicoq::set S = buildLargeCoqSet(1000);
+
+    test();
 
     int n = 1000; // number of lookups
     int m = 10; // size of the set
