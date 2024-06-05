@@ -23,25 +23,37 @@ struct stack_frame_dll {
 
 void initialize_global_thread_info();
 
-// Set of integers data structure
-class set {
+class CoqObject {
     private:
-        // Each object in the set will be added to a linked list of frames.
-        // The frame `this_frame` will be populated with the value t_value_, which stores
-        // the value underlying the set.
-        // The pointer `prev_set_ptr` is a pointer to the frame that comes before
-        // `this_frame` in the linked list.
-        value t_value_[1];
-        struct stack_frame_dll this_node;
+        // Each object will be added to a linked list of frames.
+        // The dll node `this_node` will be populated with the value value_, which stores
+        // the value underlying the object.
+        value value_[1];
+        struct stack_frame_dll node_;
+
+        void initializeNode(); // called by constructor to insert node_ into global dll
+        void freeNode(); // called by destructor to remove node_ from global dll
 
     public:
-        value getValue() const { return t_value_[0]; };
-        void setValue(value v);
+
+        value getValue() const { return value_[0]; };
+        void setValue(value v) { value_[0] = v; };
 
         // Constructors and destructors
-        set(); // empty set
-        set(const set&); // copy constructor
-        ~set();
+        CoqObject();
+        CoqObject(value v);
+        CoqObject(const CoqObject&); // copy constructor
+        ~CoqObject() { freeNode(); }; // destructor
+};
+
+// Set of integers data structure
+class set : public CoqObject {
+    public:
+        // empty set
+        set();
+        set(value v) : CoqObject(v) {};
+        set(const set& s) : CoqObject(s) {}; // copy constructor
+        ~set() = default;
 
         void add(int x);
         bool isMember(int x) const;

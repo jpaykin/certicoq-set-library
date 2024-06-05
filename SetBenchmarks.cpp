@@ -175,8 +175,8 @@ int main() {
 
     test();
 
-    int n = 1000; // number of lookups
-    int m = 10; // size of the set
+    int n = 10000; // number of lookups
+    int m = 1000; // size of the set
     for (int i=0; i<6; i++) { // prev 6, starting at 1000
         //int dur = timeit(buildLargeSet, n);
         //int dur = timeit(buildLargeCoqSet, n);

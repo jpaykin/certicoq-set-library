@@ -48,8 +48,8 @@ struct stack_frame_dll BASE = {NULL, GLOBAL__FRAME__, NULL};
 //      A: a non-null pointer to a stack_frame_dll. A should be on the current stack in tinfo.
 //      Typical argument for A is &BASE
 //
-void insert(struct stack_frame_dll* new_node,
-            struct stack_frame_dll* A){
+void insertDLL(struct stack_frame_dll* new_node,
+                struct stack_frame_dll* A){
     struct stack_frame_dll* B = A->prev;
 
     // Update new_node to point to A (next) and B (prev)
@@ -87,7 +87,7 @@ void insert(struct stack_frame_dll* new_node,
 //               v                            v
 //      [next,root,prev=frameB] ->  [nextB,rootB,prev]
 //
-void remove(struct stack_frame_dll* node) {
+void removeDLL(struct stack_frame_dll* node) {
     struct stack_frame_dll* A = node->next;
     struct stack_frame_dll* B = node->prev;
 
@@ -155,35 +155,41 @@ value uint63_from_nat(value n) {
 // Constructors //
 //////////////////
 
+void CoqObject::initializeNode() {
+    // Initialize node_ with a new frame
+    node_.frame = {value_+1, value_, NULL};
+
+    // Add node_ into the linked list of frames
+    insertDLL(&node_, &BASE);
+}
+
+void CoqObject::freeNode() {
+    removeDLL(&node_);
+}
 
 // Empty set
-set::set() {
-    // Add an empty set to t_value_[0]
-    t_value_[0] = get_args(GLOBAL__ROOT__[0])[set_empty_tag];
-
-    // Initialize this_node with a new frame
-    this_node.frame = {t_value_+1, t_value_, NULL};
-
-    // Add this_node into the linked list of frames
-    insert(&this_node, &BASE);
+set::set() : CoqObject() {
+    // Add an empty set to value_[0]
+    setValue(get_args(GLOBAL__ROOT__[0])[set_empty_tag]);
 }
+
+CoqObject::CoqObject() {
+    initializeNode();
+}
+
+// Constructor
+CoqObject::CoqObject(value v) {
+    setValue(v);
+    initializeNode();
+}
+
 
 // Copy constructor
-set::set(const set& other) {
-    t_value_[0] = other.getValue();
-
-    // Initialize this_node with a new frame
-    this_node.frame = {t_value_+1, t_value_, NULL};
-
-    // Add this_node into the linked list of frames
-    insert(&this_node, &BASE);
+CoqObject::CoqObject(const CoqObject& other) {
+    setValue(other.getValue());
+    initializeNode();
 }
 
-
-// Destructor
- set::~set() { 
-    remove(&this_node);
-};
 
 ////////////
 // Setter //
@@ -197,10 +203,6 @@ void initialize_global_thread_info() {
         GLOBAL__ROOT__[0] = body(tinfo_);
         tinfo_->fp = &(BASE.frame);
     }
-}
-
-void set::setValue(value v) {
-    t_value_[0] = v;
 }
 
 /////////////////////
