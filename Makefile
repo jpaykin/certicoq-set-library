@@ -1,4 +1,4 @@
-PATH_TO_CERTICOQ=../certicoq/plugin/runtime
+PATH_TO_CERTICOQ=../certicoq/runtime
 
 all: SetBenchmarks.o RBT.o glue.o CoqSet.o $(PATH_TO_CERTICOQ)/gc_stack.o $(PATH_TO_CERTICOQ)/prim_int63.o
 	clang++ -o SetBenchmarks $^ -lm

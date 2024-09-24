@@ -102,7 +102,7 @@ int timeit(Fun f, Args&... args) {
     auto start = std::chrono::high_resolution_clock::now();
     f(args...);
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     return duration.count();
 }
 
@@ -179,11 +179,11 @@ int main() {
     int m = 1000; // size of the set
     for (int i=0; i<6; i++) { // prev 6, starting at 1000
         //int dur = timeit(buildLargeSet, n);
-        //int dur = timeit(buildLargeCoqSet, n);
+        int dur = timeit(buildLargeCoqSet, n);
         //int dur = timeit(buildLargeCoqList, n);
         //std::cout << n << " |-> " << dur << "\n";
 
-        benchmarkCoqLookups(n, m);
+        //benchmarkCoqLookups(n, m);
         //benchmarkLookups(n, m);
         n = n * 10;
         //m = m * 10;
