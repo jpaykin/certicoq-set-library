@@ -1,5 +1,10 @@
 #include "StackFrameDLL.h"
-#include <stdlib.h> // NULL
+#include <stdio.h>
+#include <assert.h>
+
+/////////////////////////////////////////////////
+// Instantiation of stack_frame_dll operations //
+/////////////////////////////////////////////////
 
 void insertDLL(struct stack_frame_dll* new_node,
                 struct stack_frame_dll* A){
@@ -18,6 +23,15 @@ void insertDLL(struct stack_frame_dll* new_node,
     // Update B->next to point to new_node
     if (B != NULL) {
         B->next = new_node;
+    }
+
+    if (A->frame.prev == &(A->frame)) {
+        printf("ERROR: infinite loop in A\n");
+        assert(0);
+    }
+    if (new_node->frame.prev == &(new_node->frame)) {
+        printf("ERROR: infinite loop in new_node\n");
+        assert(0);
     }
 }
 

@@ -1,13 +1,13 @@
 PATH_TO_CERTICOQ=../certicoq/runtime
 
-all: SetBenchmarks.o RBT.o glue.o CoqSet.o src/StackFrameDLL.o $(PATH_TO_CERTICOQ)/gc_stack.o $(PATH_TO_CERTICOQ)/prim_int63.o
+all: SetBenchmarks.o RBT.o glue.o CoqSet.o src/StackFrameDLL.o src/CoqOps.o $(PATH_TO_CERTICOQ)/gc_stack.o $(PATH_TO_CERTICOQ)/prim_int63.o
 	clang++ -o SetBenchmarks $^ -lm
 
 $(PATH_TO_CERTICOQ)/%.o: $(PATH_TO_CERTICOQ)/%.c
 	make -C $(PATH_TO_CERTICOQ)
 
 clean:
-	rm *.o *.vo* *.glob CoqSet RBT.* glue.*
+	rm *.o *.vo* src/*.o *.glob CoqSet RBT.* glue.*
 
 RBT.c: MSetImplementation.v
 	coqc $<
@@ -19,4 +19,4 @@ glue.c: MSetImplementation.v
 	clang -c -o $@ -O2 -Wno-everything -fomit-frame-pointer -I include -I $(PATH_TO_CERTICOQ) $<
 
 %.o: %.cpp
-	clang++ -c -o $@ -O2 -fomit-frame-pointer -I $(PATH_TO_CERTICOQ) $<
+	clang++ -c -o $@ -O2 -fomit-frame-pointer -I include -I $(PATH_TO_CERTICOQ) $<

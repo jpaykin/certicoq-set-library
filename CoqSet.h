@@ -3,42 +3,16 @@
 
 #include <iostream>
 #include <set>
+#include "include/CoqOps.h"
 
 extern "C" {
     // Files found in path-to-certicoq/plugin/runtime/
     #include "values.h"
     #include "gc_stack.h"
     #include "prim_int63.h"
-    #include "include/StackFrameDLL.h"
 }
 
 namespace certicoq {
-
-
-void initialize_global_thread_info();
-
-class CoqObject {
-    private:
-        // Each object will be added to a linked list of frames.
-        // The dll node `this_node` will be populated with the value value_, which stores
-        // the value underlying the object.
-        value value_[1];
-        struct stack_frame_dll node_;
-
-        void initializeNode(); // called by constructor to insert node_ into global dll
-        void freeNode(); // called by destructor to remove node_ from global dll
-
-    public:
-
-        value getValue() const { return value_[0]; };
-        void setValue(value v) { value_[0] = v; };
-
-        // Constructors and destructors
-        CoqObject();
-        CoqObject(value v);
-        CoqObject(const CoqObject&); // copy constructor
-        ~CoqObject() { freeNode(); }; // destructor
-};
 
 // Set of integers data structure
 class set : public CoqObject {

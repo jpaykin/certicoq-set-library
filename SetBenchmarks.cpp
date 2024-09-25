@@ -170,7 +170,7 @@ void test() {
 int main() {
     
     
-    certicoq::initialize_global_thread_info();
+    //certicoq::initialize_global_thread_info();
     //certicoq::set S = buildLargeCoqSet(1000);
 
     test();

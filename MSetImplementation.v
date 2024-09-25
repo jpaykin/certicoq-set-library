@@ -118,7 +118,7 @@ Definition CertiCoqLibImpl : CertiCoqLib int RBT.t := {|
     CertiCoqSet := RBT_MSet_struct
 |}.
 
-CertiCoq Generate Glue -file "glue" [bool, nat].
+CertiCoq Generate Glue -file "glue" [bool, nat, option].
 CertiCoq Compile -file "RBT" CertiCoqLibImpl
     Extract Constants []
     Include ["stdbool.h" as library].
