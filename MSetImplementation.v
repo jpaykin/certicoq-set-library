@@ -113,7 +113,12 @@ Definition RBT_MSet_struct : MSet_struct int RBT.t :=
         mset_cardinal := RBT_size;
     |}.
 
+Record CertiCoqLib A S := { CertiCoqSet : MSet_struct A S }.
+Definition CertiCoqLibImpl : CertiCoqLib int RBT.t := {|
+    CertiCoqSet := RBT_MSet_struct
+|}.
+
 CertiCoq Generate Glue -file "glue" [bool, nat].
-CertiCoq Compile -file "RBT" RBT_MSet_struct
+CertiCoq Compile -file "RBT" CertiCoqLibImpl
     Extract Constants []
     Include ["stdbool.h" as library].

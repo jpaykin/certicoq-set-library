@@ -107,6 +107,9 @@ void removeDLL(struct stack_frame_dll* node) {
 
 // This enum copies the order of constructors of MSet_struct from
 // MSetImplementation.v
+enum CertiCoqTag {
+        set_ops_tag
+};
 enum SetOpsTag {
         set_empty_tag,
         set_mem_tag,
@@ -170,7 +173,7 @@ void CoqObject::freeNode() {
 // Empty set
 set::set() : CoqObject() {
     // Add an empty set to value_[0]
-    setValue(get_args(GLOBAL__ROOT__[0])[set_empty_tag]);
+    setValue(get_args(get_args(GLOBAL__ROOT__[0])[set_ops_tag])[set_empty_tag]);
 }
 
 CoqObject::CoqObject() {
@@ -213,7 +216,8 @@ void initialize_global_thread_info() {
 void set::add(int x) {
     value vx = int_to_value(x);
 
-    value f  = get_args(GLOBAL__ROOT__[0])[set_add_tag];
+    value f  = get_args(GLOBAL__ROOT__[0])[set_ops_tag];
+    f = get_args(f)[set_add_tag];
     value f0 = call(tinfo_, f, vx);
     value v  = call(tinfo_, f0, getValue());
     setValue(v);
@@ -222,7 +226,8 @@ void set::add(int x) {
 bool set::isMember(int x) const {
     value vx = int_to_value(x);
 
-    value f  = get_args(GLOBAL__ROOT__[0])[set_mem_tag];
+    value f  = get_args(GLOBAL__ROOT__[0])[set_ops_tag];
+    f = get_args(f)[set_mem_tag];
     value f0 = call(tinfo_, f, vx);
     value v  = call(tinfo_, f0, getValue());
 
@@ -230,7 +235,8 @@ bool set::isMember(int x) const {
 }
 
 int set::size() const {
-    value f = get_args(GLOBAL__ROOT__[0])[set_cardinal_tag];
+    value f = get_args(GLOBAL__ROOT__[0])[set_ops_tag];
+    f = get_args(f)[set_cardinal_tag];
     value v = call(tinfo_, f, getValue());
     return value_to_int(v);
 }
