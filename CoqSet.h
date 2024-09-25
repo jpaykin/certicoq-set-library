@@ -9,16 +9,10 @@ extern "C" {
     #include "values.h"
     #include "gc_stack.h"
     #include "prim_int63.h"
+    #include "include/StackFrameDLL.h"
 }
 
 namespace certicoq {
-
-
-struct stack_frame_dll {
-    struct stack_frame_dll* next;
-    struct stack_frame frame;
-    struct stack_frame_dll* prev;
-};
 
 
 void initialize_global_thread_info();
