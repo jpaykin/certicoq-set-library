@@ -14,6 +14,7 @@ Record MSet_struct A S :=
         mset_mem : A -> S -> bool;
         mset_add : A -> S -> S;
         mset_cardinal : S -> int;
+        mset_elements : S -> list A
     }.
 
 (* Skeleton definition of primitive ints as an ordered type *)
@@ -111,6 +112,7 @@ Definition RBT_MSet_struct : MSet_struct int RBT.t :=
         mset_add := RBT.add;
         (*mset_cardinal := fun x => nat_to_int (RBT.cardinal x);*)
         mset_cardinal := RBT_size;
+        mset_elements := RBT.elements;
     |}.
 
 Record CertiCoqLib A S := { CertiCoqSet : MSet_struct A S }.
@@ -118,7 +120,7 @@ Definition CertiCoqLibImpl : CertiCoqLib int RBT.t := {|
     CertiCoqSet := RBT_MSet_struct
 |}.
 
-CertiCoq Generate Glue -file "glue" [bool, nat, option].
+CertiCoq Generate Glue -file "glue" [bool, nat, option, list].
 CertiCoq Compile -file "RBT" CertiCoqLibImpl
     Extract Constants []
     Include ["stdbool.h" as library].

@@ -3,7 +3,8 @@
 
 #include <iostream>
 #include <set>
-#include "include/CoqOps.h"
+#include "CoqOps.h"
+#include "CoqList.h"
 
 extern "C" {
     // Files found in path-to-certicoq/plugin/runtime/
@@ -26,6 +27,8 @@ class set : public CoqObject {
         void add(int x);
         bool isMember(int x) const;
         int size() const;
+        list<int> elems() const;
+
 };
 
 }

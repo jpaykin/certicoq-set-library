@@ -33,8 +33,7 @@ namespace certicoq {
 
 // Index into the extracted code
 enum CoqOpsTag {
-    SetBodyTag,
-    PauliVerifiedBodyTag
+    SetBodyTag
 };
 
 // To interact with extracted Coq code, we need a thread_info pointer
@@ -78,13 +77,16 @@ class ThreadInfo {
 
 class CoqObject {
     private:
+
+    protected:
+
         value value_[1];
         // Each object will be added to a linked list of frames
         // The dll node `node_` will be populated with the value value_, which stores
         // the value underlying the object.
         struct stack_frame_dll node_;
 
-    protected:
+        
         // helper functions for frame management
         void initializeNode(); // insert node_ into global dll
         void freeNode();       // remove node_ from global dll
@@ -117,7 +119,6 @@ class CoqObject {
 // values
 template <typename T> value toValue(T v);
 template <typename T> T fromValue(value v);
-
 
 ////////////////////////////
 // Other helper functions //

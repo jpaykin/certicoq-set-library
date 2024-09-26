@@ -165,6 +165,29 @@ void test() {
     }
     std::cout << "X has size " << X.size() << "\n";
     std::cout << "Y has size " << Y.size() << "\n";
+
+
+    std::cout << "X: " << X.elems() << "\n";
+
+    // Test iterator
+    // auto X_list = X.elems();
+    // certicoq::list<int>::Iterator it = X_list.begin();
+    // std::cout << "Got begin; head = " << *it << "\n";
+    // ++it;
+    // std::cout << "Incremented it: " << *it << "\n";
+    // value v1 = *it;
+    // std::cout << "Next: " << *(++it) << "\n";
+    // value v2 = *it;
+    // std::cout << "Next: " << *(++it) << "\n";
+    // std::cout << "Is it equal to end? " << (X_list.begin().iter_ == it.iter_) << "\n";
+
+    std::vector<int> X_vec = X.elems().toVector();
+    for (auto it = X_vec.begin(); it != X_vec.end(); ++it) {
+        if (*it % 7 == 0) {
+            std::cout << *it << " ";
+        }
+    }
+    std::cout << "\n";
 }
 
 int main() {
@@ -177,7 +200,7 @@ int main() {
 
     int n = 10000; // number of lookups
     int m = 1000; // size of the set
-    for (int i=0; i<6; i++) { // prev 6, starting at 1000
+    for (int i=0; i<0; i++) { // prev 6, starting at 1000
         //int dur = timeit(buildLargeSet, n);
         int dur = timeit(buildLargeCoqSet, n);
         //int dur = timeit(buildLargeCoqList, n);

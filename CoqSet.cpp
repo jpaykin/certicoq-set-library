@@ -26,7 +26,8 @@ enum SetOpsTag {
         set_empty_tag,
         set_mem_tag,
         set_add_tag,
-        set_cardinal_tag
+        set_cardinal_tag,
+        set_elements_tag
 };
 enum natTag {
         nat_O_tag,
@@ -38,17 +39,15 @@ value getBody() {
     return applyTag(ThreadInfo::getBody(), SetBodyTag);
 }
 
-
 // Empty set
 set::set() : CoqObject() {
     // Add an empty set to value_[0]
     setValue(get_args(getBody())[set_empty_tag]);
 }
 
-
-/////////////////////
+////////////////////
 // set Operations //
-/////////////////////
+////////////////////
 
 
 void set::add(int x) {
@@ -67,4 +66,10 @@ int set::size() const {
     value v = applyTag(getBody(), set_cardinal_tag, getValue());
     return fromValue<int>(v);
 }
+
+list<int> set::elems() const {
+    value v = applyTag(getBody(), set_elements_tag, getValue());
+    return list<int>(v);
+}
+
 }
