@@ -95,10 +95,9 @@ template<> value toValue<CoqObject>(CoqObject v) {
 // let v be a value of Coq type (option A)
 // if v = None, throw an error with the given message
 // Otherwise, if v = Some v', return v'
-enum option_tag {Some_tag, None_tag};
 value fromOptionWithError(value v, std::string m) {
     unsigned int ctr = get_Coq_Init_Datatypes_option_tag(v);
-    if (v == None_tag) {
+    if (ctr == None_tag) {
       throw(std::runtime_error(m));
     } else {
       return get_args(v)[0];

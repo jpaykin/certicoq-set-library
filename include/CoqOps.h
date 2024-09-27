@@ -18,7 +18,7 @@
 #include <cassert>
 #include <iostream>
 #include <vector>
-
+#include <optional>
 
 extern "C" {
     #include "values.h"
@@ -27,14 +27,18 @@ extern "C" {
 
     extern value *get_args(value);
     extern value call(struct thread_info *, value, value);
+
+    extern unsigned int get_Coq_Init_Datatypes_option_tag(value);
 }
 
 namespace certicoq {
 
 // Index into the extracted code
 enum CoqOpsTag {
-    SetBodyTag
+    SetBodyTag,
+    MapBodyTag
 };
+enum option_tag {Some_tag, None_tag};
 
 // To interact with extracted Coq code, we need a thread_info pointer
 // that manages the runtime/garbage collection.
@@ -128,6 +132,15 @@ template <typename T> T fromValue(value v);
 // if v = None, throw an error with the given message
 // Otherwise, if v = Some v', return v'
 value fromOptionWithError(value v, std::string m);
+template <typename T>
+std::optional<T> fromOption(value v) {
+    unsigned int ctr = get_Coq_Init_Datatypes_option_tag(v);
+    if (ctr == None_tag) {
+      return {};
+    } else {
+      return fromValue<T>(get_args(v)[0]);
+    }
+}
 
 value calls(struct thread_info* tinfo, value clos);
 value calls(struct thread_info* tinfo, value clos, value arg0);

@@ -1,6 +1,6 @@
 #include <iostream>
 #include "CoqSet.h"
-//#include "SetC.h"
+#include "CoqMap.h"
 #include <cassert>
 #include <set>
 #include <chrono>
@@ -200,7 +200,7 @@ int main() {
 
     int n = 10000; // number of lookups
     int m = 1000; // size of the set
-    for (int i=0; i<0; i++) { // prev 6, starting at 1000
+    for (int i=0; i<2; i++) { // prev 6, starting at 1000
         //int dur = timeit(buildLargeSet, n);
         int dur = timeit(buildLargeCoqSet, n);
         //int dur = timeit(buildLargeCoqList, n);
@@ -211,6 +211,33 @@ int main() {
         n = n * 10;
         //m = m * 10;
     }
+
+    certicoq::intmap<bool> X;
+    assert(X.isEmpty());
+    X.add(3, true);
+    assert(!X.isEmpty());
+    std::optional<bool> result = X.find(3);
+    assert(result.has_value() && result.value() == true && X.mem(3) && !X.mem(4));
+    result = X.find(4);
+    assert(!result.has_value() && X.size() == 1);
+    X.remove(3);
+    result = X.find(3);
+    assert(!result.has_value() && X.isEmpty() && !X.mem(3) && X.size() == 0);
+
+    X.add(4,true);
+    X.add(23,false);
+
+    // auto items = X.elems().toVector();
+    // for (auto item : items) {
+    //     auto[k,v] = item;
+    //     std::cout << k << " |-> " << v << "\n";
+    // }
+
+
+    //std::cout << "x has value? " << result.has_value() << "\n";
+    //std::cout << "x value = " << result.value() << "\n";
+    //result = X.find(4);
+    //assert (result == std::nullopt);
     
 /*
 

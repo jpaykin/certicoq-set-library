@@ -29,10 +29,6 @@ enum SetOpsTag {
         set_cardinal_tag,
         set_elements_tag
 };
-enum natTag {
-        nat_O_tag,
-        nat_S_tag
-};
 
 
 value getBody() { 

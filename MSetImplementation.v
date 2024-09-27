@@ -115,9 +115,47 @@ Definition RBT_MSet_struct : MSet_struct int RBT.t :=
         mset_elements := RBT.elements;
     |}.
 
-Record CertiCoqLib A S := { CertiCoqSet : MSet_struct A S }.
-Definition CertiCoqLibImpl : CertiCoqLib int RBT.t := {|
-    CertiCoqSet := RBT_MSet_struct
+(* Finite Maps *)
+
+Require Import Coq.FSets.FMapWeakList.
+Record FMap_struct K V M :=
+    {
+        fmap_empty : M;
+        fmap_is_empty : M -> bool;
+        fmap_add : K -> V -> M -> M;
+        fmap_find : K -> M -> option V;
+        fmap_remove : K -> M -> M;
+        fmap_mem : K -> M -> bool;
+        fmap_equal : (V -> V -> bool) -> M -> M -> bool;
+        fmap_elements : M -> list (K * V);
+        fmap_size : M -> int;
+    }.
+
+Module AVLMap := Coq.FSets.FMapWeakList.Make(int_as_OT).
+Definition anytype := bool.
+Definition AVLMap_Instance : FMap_struct int anytype (AVLMap.t anytype) :=
+    {|
+        fmap_empty := @AVLMap.empty anytype;
+        fmap_is_empty := @AVLMap.is_empty anytype : AVLMap.t anytype -> bool;
+        fmap_add := @AVLMap.add anytype;
+        fmap_find := @AVLMap.find anytype;
+        fmap_remove := @AVLMap.remove anytype;
+        fmap_mem := @AVLMap.mem anytype;
+        fmap_equal := @AVLMap.equal anytype;
+        fmap_elements := @AVLMap.elements anytype;
+        fmap_size := fun x => nat_to_int (AVLMap.cardinal x);
+    |}.
+
+
+(* Export *)
+
+Record CertiCoqLib := {
+    CertiCoqSet : MSet_struct int RBT.t;
+    CertiCoqMap : FMap_struct int anytype (AVLMap.t anytype)
+    }.
+Definition CertiCoqLibImpl : CertiCoqLib := {|
+    CertiCoqSet := RBT_MSet_struct;
+    CertiCoqMap := AVLMap_Instance
 |}.
 
 CertiCoq Generate Glue -file "glue" [bool, nat, option, list].
